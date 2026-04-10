@@ -1,10 +1,10 @@
 # Deep Project Audit
 
-Run one command, get a full audit. Architecture, security, performance, resilience, docs -- what's broken, what to fix first, and whether you or your agents can handle it.
+Run one command, get a full audit. Architecture, security, performance, resilience, docs - what's broken, what to fix first, and whether you or your agents can handle it.
 
 > Works on anything you can point it at: agent systems, pipelines, web apps, CLIs, microservices, infra.
 
-It's a [Claude Code Skill](https://code.claude.com/docs/en/skills) -- six phases, one report, fixes ranked by impact.
+It's a [Claude Code Skill](https://code.claude.com/docs/en/skills) - six phases, one report, fixes ranked by impact.
 
 I made this because I kept writing the same audit prompt from scratch every time I wanted to properly review a project. Started with a 12-agent pipeline on [Paperclip](https://github.com/paperclipai/paperclip), turned it into something that works on any project.
 
@@ -20,14 +20,14 @@ One command. Full analysis. Actionable output.
 
 The audit discovers your project structure dynamically, reads everything, queries databases, tests backup integrity, and produces a structured report covering:
 
-- Architecture and code quality -- design patterns, MECE analysis, contradictions, scalability, test coverage
-- Error handling and resilience -- crash scenarios, timeout coverage, silent failures, data integrity, edge cases
-- Performance and bottleneck analysis -- timing, parallelism, scaling limits, resource waste, cost analysis
-- Security and data exposure -- secrets, injection vulnerabilities, PII, supply chain, workflow security
-- Logging and observability -- structured logs, traceability, alerting, monitoring
-- Documentation quality -- accuracy vs codebase, completeness, onboarding readiness
-- Production readiness -- 10-gate PASS/PARTIAL/FAIL checklist with a ship/no-ship verdict
-- Ranked recommendations -- top 10 actions with impact, effort, and who implements
+- Architecture and code quality - design patterns, MECE analysis, contradictions, scalability, test coverage
+- Error handling and resilience - crash scenarios, timeout coverage, silent failures, data integrity, edge cases
+- Performance and bottleneck analysis - timing, parallelism, scaling limits, resource waste, cost analysis
+- Security and data exposure - secrets, injection vulnerabilities, PII, supply chain, workflow security
+- Logging and observability - structured logs, traceability, alerting, monitoring
+- Documentation quality - accuracy vs codebase, completeness, onboarding readiness
+- Production readiness - 10-gate PASS/PARTIAL/FAIL checklist with a ship/no-ship verdict
+- Ranked recommendations - top 10 actions with impact, effort, and who implements
 
 ## How it works
 
@@ -126,13 +126,13 @@ Go to your project directory and run `/deep-project-audit`. Or just say "audit t
 A few rules I keep coming back to when reviewing my own projects:
 
 1. Look at the project before making assumptions about it. Map first, read second.
-2. Check with the user before going deep. "This is what I found, this is what I'll audit -- sound right?" saves everyone's time.
+2. Check with the user before going deep. "This is what I found, this is what I'll audit - sound right?" saves everyone's time.
 3. Don't critique what you haven't read.
 4. Put numbers on things. "23% duplicate rate" is useful. "Some duplicates" is not.
 5. Compare what the docs say against what the code does. The gap between those two is where most problems hide.
 6. Every recommendation answers four things: what, why, how much work, who does it. Anything less is just complaining.
 7. The audit should be useful now, not next sprint. If you can say "fix them all" and start working immediately, it did its job.
-8. Test the safety nets. Backups exist? Restore one. Retry logic? Trace what happens when it fires. Don't report that something exists -- report whether it works.
+8. Test the safety nets. Backups exist? Restore one. Retry logic? Trace what happens when it fires. Don't report that something exists - report whether it works.
 9. Find what's wrong, not just what's right. The point is to make the project better, not to feel good about it.
 10. Surface the constraints nobody talks about: rate limits, daily budgets, peak hour pricing. Those shape what's actually possible more than architecture does.
 
@@ -170,7 +170,7 @@ deep-project-audit/
 │   ├── performance-analysis.md           # Section 4.6: full performance checks
 │   └── resilience-testing.md             # Phase 6: backup and resilience tests
 ├── examples/
-│   ├── sample-audit.md                   # With-skill audit: content pipeline
+│   ├── benchmark-audit-a.md               # With-skill audit: content pipeline
 │   ├── benchmark-audit-b.md              # With-skill audit: agent pipeline
 │   ├── benchmark-audit-c.md              # With-skill audit: browser tool
 │   ├── baseline-audit-a.md               # Without-skill baseline: content pipeline
@@ -189,7 +189,13 @@ The main SKILL.md contains the methodology and output format. Detailed checklist
 
 ## Token usage
 
-A typical audit uses 100K-300K tokens across all 6 phases. A big agent system with 600+ files and a database runs about 250K. A small CLI tool with 20 files runs about 50K. See [`examples/sample-audit.md`](examples/sample-audit.md) for an anonymized example from a real project.
+A typical audit uses 50K-300K tokens across all 6 phases, depending on project size:
+
+| Project type | Files | Tokens | Example |
+|---|---|---|---|
+| Small CLI/browser tool | ~20 | ~50K | [`benchmark-audit-c.md`](examples/benchmark-audit-c.md) |
+| Medium pipeline | ~50 | ~150K | [`benchmark-audit-a.md`](examples/benchmark-audit-a.md) |
+| Large agent system | 600+ | ~250K | [`benchmark-audit-b.md`](examples/benchmark-audit-b.md) |
 
 ## Contributing
 
