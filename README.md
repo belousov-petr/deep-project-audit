@@ -52,12 +52,12 @@ mkdir -p ~/.claude/skills/deep-project-audit
 cp -r deep-project-audit/SKILL.md deep-project-audit/references ~/.claude/skills/deep-project-audit/
 ```
 
-Or grab just the core skill file (works without references, but skips detailed checklists):
+Or grab just the core skill file (works but loses 11 reference checklists — shallower audit):
 
 ```bash
 mkdir -p ~/.claude/skills/deep-project-audit
 curl -o ~/.claude/skills/deep-project-audit/SKILL.md \
-  https://raw.githubusercontent.com/belousov-petr/deep-project-audit/main/SKILL.md
+  https://raw.githubusercontent.com/belousov-petr/deep-project-audit/master/SKILL.md
 ```
 
 Restart Claude Code. It shows up as `/deep-project-audit`.
