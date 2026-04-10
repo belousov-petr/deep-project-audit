@@ -144,6 +144,24 @@ It's never the obvious stuff. It's always the thing you assumed was fine until i
 
 So I made it into a skill. Same checklist, same order, every time. Now I run one command and know I'm not skipping anything. It also finds things I wasn't looking for, which surprised me. After using it on a few projects I figured other people might find it useful too.
 
+## Project structure
+
+```
+deep-project-audit/
+├── SKILL.md                              # The skill — loaded when activated
+├── references/
+│   ├── db-diagnostics.md                 # Phase 3: database-specific queries
+│   ├── security-checklist.md             # Section 5.1: full security checks
+│   ├── performance-analysis.md           # Section 4.6: full performance checks
+│   └── resilience-testing.md             # Phase 6: backup and resilience tests
+├── examples/
+│   └── sample-audit.md                   # Anonymized example from a real audit
+├── README.md
+└── LICENSE                               # CC BY 4.0
+```
+
+The main SKILL.md contains the methodology and output format. Detailed checklists are in `references/` and loaded on demand — this keeps activation cost low while preserving depth.
+
 ## Token usage
 
 A typical audit uses 100K-300K tokens across all 6 phases. A big agent system with 600+ files and a database runs about 250K. A small CLI tool with 20 files runs about 50K. See [`examples/sample-audit.md`](examples/sample-audit.md) for an anonymized example from a real project.

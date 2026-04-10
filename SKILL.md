@@ -1,7 +1,11 @@
 ---
-name: "deep-project-audit"
-version: "1.0.0"
+name: deep-project-audit
 description: "Full-stack audit of any project — multi-agent systems, pipelines, codebases, or applications. Dynamically discovers project structure, reads all config/code/data, queries databases, tests backup integrity, and analyzes architecture, reliability, efficiency, and security. Produces ranked actionable recommendations. Use when asked to audit, analyze, review, stress-test, or challenge any project, or when user asks 'how solid is this project', 'what is missing', or 'find the weak spots'."
+license: CC-BY-4.0
+compatibility: "Requires Claude Code or similar agent with file-read, shell execution, and parallel subagent capabilities"
+metadata:
+  author: belousov-petr
+  version: "1.0.0"
 ---
 
 # Deep Project Audit
@@ -116,12 +120,22 @@ Scope: audit everything above. Proceed?
 Wait for user confirmation. This prevents wasting tokens auditing the
 wrong project, wrong subdirectory, or wrong scope.
 
+**If user declines scope**: ask what to narrow to or exclude. Do not
+abort — adjust the scope and re-confirm.
+
 ---
 
 ## Phase 2: Full Content Read (Parallel)
 
 Dispatch **4 parallel agents**, each reading one slice of the project.
 Adapt the slices to whatever Phase 1 discovered.
+
+**If project has >1000 files**: sample instead of reading everything.
+Read representative files from each directory (2-3 per folder), count
+the rest, and note which areas were sampled vs fully read.
+
+**If a parallel agent fails**: continue with the remaining agents.
+Note the gap in the final report and flag what was not covered.
 
 ### Agent 1: Architecture & Configuration
 Read all configuration and architectural files:
@@ -156,39 +170,17 @@ Explore and quantify (count, don't read every file):
 
 ## Phase 3: Data Store Diagnostics
 
-If the project has a database (SQL, NoSQL, or embedded):
+If the project has a database (SQL, NoSQL, or embedded), run diagnostics.
 
-### 3a. Find Connection Credentials
-- Check config files, .env, source code for connection strings
-- For embedded databases, trace from running processes to find binaries and auth
+**If no database found**: skip this phase. Note "No data store detected"
+in the report and proceed to Phase 4.
 
-### 3b. Query Operational Metrics
+**If database found but credentials unavailable**: skip queries. Note
+"Database detected but could not access — manual credential needed" and
+proceed to Phase 4.
 
-Adapt queries to whatever database exists:
-
-**For SQL databases (PostgreSQL, SQLite, MySQL):**
-```sql
--- Schema overview: what tables exist and how big are they?
-SELECT tablename FROM pg_tables WHERE schemaname = 'public';
-
--- If there are agent/run/job tables, get reliability stats:
--- Success rate, failure rate, average duration per agent/worker
-
--- Recent failures with error details
-
--- Data freshness: when was the last write to key tables?
-```
-
-**For file-based data stores:**
-
-Count files per directory, check modification dates. Identify stale
-data (last modified > expected interval). Check for schema consistency
-across sample files.
-
-**For NoSQL databases:**
-- Collection sizes, document counts
-- Index health
-- Recent error logs
+See [DB Diagnostics](references/db-diagnostics.md) for database-specific
+queries and inspection guidance.
 
 ---
 
@@ -222,18 +214,15 @@ Things that will cause failures soon. Must include evidence:
 - Scalability limits — what breaks at 2x, 10x, 100x current load?
 
 **Design patterns & coherence:**
-- Are design patterns consistent across the codebase? (e.g., one module
-  uses event-driven, another uses polling — is this intentional or drift?)
+- Are design patterns consistent across the codebase?
 - MECE check: are responsibilities mutually exclusive and collectively
-  exhaustive? Look for overlapping ownership (two components doing the
-  same thing) and gaps (work that nobody owns).
+  exhaustive? Look for overlapping ownership and gaps.
 - Contradictions: do any instructions, configs, or code paths contradict
-  each other? (e.g., agent A told to write to path X, agent B told to
-  read from path Y for the same data)
+  each other?
 
 **Code quality (if source code exists):**
 - File sizes — any files > 500 lines that should be split?
-- Dead code, commented-out blocks, TODOs that were never addressed
+- Dead code, commented-out blocks, unaddressed TODOs
 - Naming consistency across the codebase
 - Complexity hotspots (deeply nested logic, long functions)
 
@@ -244,9 +233,7 @@ Things that will cause failures soon. Must include evidence:
 
 ### 4.5 Error Handling, Resilience & Failure Modes
 
-This section covers both code-level error handling and system-level
-failure modes. For each, trace the actual behavior — don't just note
-that mechanisms exist.
+Trace actual behavior for each — don't just note that mechanisms exist.
 
 **Crash scenarios:**
 - What happens when each component fails? Trace the failure path.
@@ -265,11 +252,11 @@ that mechanisms exist.
 **Data integrity:**
 - Can a crash mid-write corrupt data? (atomic writes, transactions)
 - Are there orphaned records, dangling references, or stale state?
-- Is there validation at system boundaries (input from users, APIs, files)?
+- Is there validation at system boundaries?
 
 **Edge cases:**
 - What happens with empty input, null values, malformed data?
-- What happens at boundary conditions (0 items, max items, duplicate items)?
+- What happens at boundary conditions (0 items, max items, duplicates)?
 - What happens with concurrent access (two agents writing same file)?
 
 **System-level failure modes:**
@@ -277,44 +264,17 @@ that mechanisms exist.
 - What happens if an external API/service is unavailable?
 - What happens if a scheduled job fails silently?
 - What's the maximum data loss window?
-- What happens if the host goes down? Is there a migration/deployment path?
 - What's the recovery time objective?
 - Has any of this been tested?
 
 ### 4.6 Performance & Bottleneck Analysis
 
-**Timing:**
-- How long does each pipeline stage take? Where is time spent?
-- What's the end-to-end latency from input to output?
-- Are there unnecessary sequential operations that could be parallel?
+See [Performance Analysis](references/performance-analysis.md) for the
+full checklist covering timing, parallelism, scaling, resource waste,
+cost analysis, and optimization opportunities.
 
-**Parallelism:**
-- What runs in parallel? What's forced sequential?
-- Are there lock contention or race condition risks?
-- Could throughput increase with more parallelism?
-
-**Scaling:**
-- What happens at 2x, 10x, 100x current data volume?
-- Are there O(n^2) operations hiding in loops?
-- Is storage growing linearly or accelerating?
-
-**Resource waste (quantified):**
-- Duplicate processing across pipeline stages
-- Empty/low-value items consuming processing time
-- Redundant operations (same data read/written multiple times)
-- Oversized storage (backups, logs, caches)
-- Logic waste: unnecessary steps, over-engineered paths, actions that
-  produce no value
-- Token/API waste: calls that could be batched, cached, or skipped
-
-**Cost analysis:**
-- What does this project cost to run per day/week/month?
-- For LLM-powered: token/message consumption vs subscription/API budget
-- For API-based: external service costs
-- For infrastructure: compute, storage, bandwidth
-- Is the cost justified by the value delivered?
-
-**Optimization opportunities** with estimated impact.
+Summarize key findings here: biggest bottleneck, biggest waste, estimated
+cost, and top 3 optimization opportunities with expected impact.
 
 ---
 
@@ -322,41 +282,12 @@ that mechanisms exist.
 
 ### 5.1 Security & Data Exposure
 
-**Secrets & credentials:**
-- Scan for hardcoded API keys, tokens, passwords, connection strings
-- Check .gitignore — are .env, credentials, key files excluded?
-- Check git history for accidentally committed secrets
-- Are secrets in plaintext or encrypted/vault store?
+See [Security Checklist](references/security-checklist.md) for the full
+list of checks covering secrets, injection, PII, supply chain, workflow
+security, and network exposure.
 
-**Injection vulnerabilities:**
-- SQL injection: user input parameterized or string-concatenated?
-- Prompt injection: can external data influence LLM system prompts?
-- Command injection: does any code pass user input to shell commands?
-- Path traversal: can file paths be manipulated?
-
-**Privacy & PII:**
-- Scan data files and database for PII (names, emails, phone numbers,
-  addresses, IPs, financial data, government IDs)
-- How is PII stored? Encrypted at rest? Access-controlled?
-- Data retention policy? Are old records purged?
-- GDPR: right to deletion, portability, consent tracking
-- Are logs sanitized or do they contain sensitive data?
-
-**Supply chain:**
-- Dependencies from trusted sources? Lock files committed?
-- Known CVEs? (`npm audit`, `pip audit`, `cargo audit`)
-- CI/CD actions pinned to specific versions?
-
-**Workflow security:**
-- Who can trigger runs? Is there authentication?
-- Can a worker escalate privileges or access other workers' data?
-- Are webhook endpoints authenticated?
-
-**Network & infrastructure:**
-- What ports are open? Localhost only or publicly accessible?
-- TLS/SSL where needed?
-- Rate limits on external services (LLM providers, APIs)
-- Peak hour pricing or throttling
+Summarize key findings here: any secrets exposed, injection risks found,
+PII handling issues, dependency vulnerabilities.
 
 ### 5.2 Logging & Observability
 
@@ -364,8 +295,7 @@ that mechanisms exist.
 - Are logs structured (JSON with fields) or unstructured (free text)?
 - Can you trace a request/signal end-to-end through the system?
 - Is there log rotation? Are old logs purged or do they grow forever?
-- Are errors logged with enough context to diagnose (stack trace, input
-  data, timestamp, component name)?
+- Are errors logged with enough context to diagnose?
 - Is there any monitoring dashboard or alerting?
 
 ### 5.3 Documentation Quality
@@ -388,8 +318,7 @@ Compare the **stated objective** (captured in Phase 1d) against actual behavior:
 - Does the system do what it claims to do?
 - Are there features described in docs/README that don't work?
 - Are there capabilities the system has that aren't documented?
-- Is the objective achievable with the current architecture, or is there
-  a fundamental mismatch?
+- Is the objective achievable with the current architecture?
 
 ### 5.5 Blind Spots
 What nobody is monitoring. Check for:
@@ -458,21 +387,11 @@ assumptions that undermine everything else.
 
 ## Phase 6: Resilience Testing
 
-### 6a. Backup Validation (if backups exist)
+**If no backups exist**: note as critical gap in the report. Skip
+restore testing but still assess operational resilience.
 
-**Test it. Don't just note that backups exist.**
-
-1. Find the latest backup file
-2. Check its structure (header, footer, completeness)
-3. If possible: restore into a temporary location, verify data integrity,
-   compare with production, clean up
-4. Report: does disaster recovery actually work?
-
-### 6b. Operational Resilience
-- Is there a documented recovery procedure?
-- Can the system be migrated to a different host?
-- What's the recovery time objective?
-- Has disaster recovery ever been tested?
+See [Resilience Testing](references/resilience-testing.md) for backup
+validation steps and operational resilience checks.
 
 ---
 
