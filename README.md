@@ -37,6 +37,47 @@ The audit discovers your project structure dynamically, reads everything, querie
 - Production readiness - 10-gate PASS/PARTIAL/FAIL checklist with a ship/no-ship verdict
 - Ranked recommendations - top 10 actions with impact, effort, and who implements
 
+## Installation
+
+### Claude Code (CLI or Desktop)
+
+Clone the full skill (recommended — includes reference checklists for deeper analysis):
+
+```bash
+git clone https://github.com/belousov-petr/deep-project-audit.git
+mkdir -p ~/.claude/skills/deep-project-audit
+cp -r deep-project-audit/SKILL.md deep-project-audit/references ~/.claude/skills/deep-project-audit/
+```
+
+Or grab just the core skill file (works without references, but skips detailed checklists):
+
+```bash
+mkdir -p ~/.claude/skills/deep-project-audit
+curl -o ~/.claude/skills/deep-project-audit/SKILL.md \
+  https://raw.githubusercontent.com/belousov-petr/deep-project-audit/main/SKILL.md
+```
+
+Restart Claude Code. It shows up as `/deep-project-audit`.
+
+### Any skills-compatible agent (cross-client)
+
+Use the `.agents/skills/` path for compatibility with Cursor, Gemini CLI, Copilot, and [30+ other clients](https://agentskills.io/home):
+
+```bash
+git clone https://github.com/belousov-petr/deep-project-audit.git
+mkdir -p ~/.agents/skills/deep-project-audit
+cp -r deep-project-audit/SKILL.md deep-project-audit/references ~/.agents/skills/deep-project-audit/
+```
+
+Or install at project level (travels with the repo):
+
+```bash
+mkdir -p .agents/skills/deep-project-audit
+git clone https://github.com/belousov-petr/deep-project-audit.git /tmp/dpa
+cp -r /tmp/dpa/SKILL.md /tmp/dpa/references .agents/skills/deep-project-audit/
+rm -rf /tmp/dpa
+```
+
 ## How it works
 
 ### Phase 1: Discover
@@ -57,69 +98,23 @@ Security scan, PII check, documentation accuracy, whether the project actually d
 ### Phase 6: Test resilience
 Checks whether backups actually restore (not just whether they exist). Traces what happens when components fail.
 
-## What happens after
-
-The report is built so you can act on it immediately. You can say:
-
-```
-Fix them all
-```
-
-and it becomes the implementation plan. Or pick specific items, ask for more detail on a section, or re-run just one phase after you've made changes.
-
-## Installation
-
-### Claude Code (CLI or Desktop)
-
-```bash
-git clone https://github.com/belousov-petr/deep-project-audit.git
-mkdir -p ~/.claude/skills/deep-project-audit
-cp deep-project-audit/SKILL.md ~/.claude/skills/deep-project-audit/SKILL.md
-```
-
-Or grab just the skill file:
-
-```bash
-mkdir -p ~/.claude/skills/deep-project-audit
-curl -o ~/.claude/skills/deep-project-audit/SKILL.md \
-  https://raw.githubusercontent.com/belousov-petr/deep-project-audit/main/SKILL.md
-```
-
-Restart Claude Code. It shows up as `/deep-project-audit`.
-
-### Any skills-compatible agent (cross-client)
-
-Use the `.agents/skills/` path for compatibility with Cursor, Gemini CLI, Copilot, and [30+ other clients](https://agentskills.io/home):
-
-```bash
-mkdir -p ~/.agents/skills/deep-project-audit
-curl -o ~/.agents/skills/deep-project-audit/SKILL.md \
-  https://raw.githubusercontent.com/belousov-petr/deep-project-audit/main/SKILL.md
-```
-
-Or install at project level (travels with the repo):
-
-```bash
-mkdir -p .agents/skills/deep-project-audit
-curl -o .agents/skills/deep-project-audit/SKILL.md \
-  https://raw.githubusercontent.com/belousov-petr/deep-project-audit/main/SKILL.md
-```
-
 ## Usage
 
 Go to your project directory and run `/deep-project-audit`. You should see it start mapping your project structure.
 
-It also activates from natural language. Any of these will trigger it:
+It also activates from natural language:
 
-- "audit this project"
-- "find the weak spots"
-- "is this production ready"
-- "what's wrong with this"
-- "do a health check on this project"
-- "how mature is this"
-- "due diligence on this codebase"
-- "assess technical debt"
-- "gap analysis"
+| Say this | What it maps to |
+|----------|----------------|
+| `audit this project` | Full 6-phase audit |
+| `find the weak spots` | Full audit, emphasis on critical issues |
+| `is this production ready` | Full audit, emphasis on readiness gates |
+| `what's wrong with this` | Full audit, emphasis on problems |
+| `do a health check on this project` | Full audit, broad assessment |
+| `how mature is this` | Full audit, emphasis on maturity scoring |
+| `due diligence on this codebase` | Full audit, emphasis on risks and gaps |
+| `assess technical debt` | Full audit, emphasis on architecture and code quality |
+| `gap analysis` | Full audit, emphasis on blind spots |
 
 ### The report covers
 
@@ -140,16 +135,19 @@ It also activates from natural language. Any of these will trigger it:
 15. Top 10 ranked fixes with effort estimates
 16. The uncomfortable question
 
-## Works on
+## What to do with the report
 
-| Project type | What gets checked |
-|---|---|
-| Agent systems (Paperclip, CrewAI, AutoGen) | Instructions, heartbeats, coordination, pipeline flow, signal quality |
-| Web apps | Routes, API design, auth, DB schema, frontend/backend split |
-| Data pipelines | Stage flow, data integrity, scheduling, error handling, throughput |
-| CLI tools | Argument handling, error messages, edge cases, docs |
-| Monorepos | Package boundaries, dependencies, build system, cross-package consistency |
-| Microservices | Service boundaries, API contracts, resilience, observability |
+The report is built so you can act on it immediately. Here's what you can say after the audit finishes:
+
+| Say this | What happens |
+|----------|-------------|
+| `Fix them all` | Starts implementing all recommendations in priority order |
+| `Fix the critical ones` | Only tackles items rated Critical or FAIL |
+| `Explain recommendation #3 in detail` | Deep-dive into a specific finding with implementation steps |
+| `Re-run Phase 5 only` | Re-checks just one phase after you've made changes |
+| `Create GitHub issues for each recommendation` | Turns findings into trackable issues |
+| `Prioritize for a solo developer` | Filters by what a human needs to do vs what agents can handle |
+| `Compare with the last audit` | If you've run it before, diffs the reports to show progress |
 
 ## How it thinks
 
@@ -165,6 +163,17 @@ A few rules I keep coming back to when reviewing my own projects:
 8. Test the safety nets. Backups exist? Restore one. Retry logic? Trace what happens when it fires. Don't report that something exists - report whether it works.
 9. Find what's wrong, not just what's right. The point is to make the project better, not to feel good about it.
 10. Surface the constraints nobody talks about: rate limits, daily budgets, peak hour pricing. Those shape what's actually possible more than architecture does.
+
+## Works on
+
+| Project type | What gets checked |
+|---|---|
+| Agent systems (Paperclip, CrewAI, AutoGen) | Instructions, heartbeats, coordination, pipeline flow, signal quality |
+| Web apps | Routes, API design, auth, DB schema, frontend/backend split |
+| Data pipelines | Stage flow, data integrity, scheduling, error handling, throughput |
+| CLI tools | Argument handling, error messages, edge cases, docs |
+| Monorepos | Package boundaries, dependencies, build system, cross-package consistency |
+| Microservices | Service boundaries, API contracts, resilience, observability |
 
 ## Benchmark results
 
