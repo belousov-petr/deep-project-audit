@@ -5,11 +5,12 @@ description: >-
   or applications. Dynamically discovers project structure, reads all
   config/code/data, queries databases, tests backup integrity, and analyzes
   architecture, reliability, efficiency, and security. Produces ranked actionable
-  recommendations. Use when asked to audit, analyze, review, health check,
-  stress-test, due diligence, gap analysis, or challenge any project, assess
-  technical debt, or when user asks 'how solid is this project', 'what is missing',
-  'find the weak spots', 'is this production ready', 'what's wrong with this',
-  or 'how mature is this'.
+  recommendations. Use when asked to audit a project, do a project health check,
+  stress-test a codebase, run due diligence, do a gap analysis, or assess
+  technical debt. Also when user asks 'how solid is this project',
+  'what is missing', 'find the weak spots', 'is this production ready',
+  'what's wrong with this project', or 'how mature is this project'.
+  Do NOT activate for simple code reviews, PR reviews, or single-file analysis.
 license: CC-BY-4.0
 compatibility: >-
   Requires Claude Code or similar agent with file-read, shell execution,

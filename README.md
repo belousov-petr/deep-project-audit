@@ -105,7 +105,7 @@ Checks whether backups actually restore (not just whether they exist). Traces wh
 
 Go to your project directory and run `/deep-project-audit`. You should see it start mapping your project structure.
 
-It also activates from natural language — `audit this project`, `is this production ready`, `find the weak spots`, or similar.
+It also activates when you ask things like `audit this project`, `is this production ready`, or `find the weak spots`. Claude Code matches your request against the skill's description — any phrasing around auditing, health checking, or stress-testing a whole project should trigger it. It won't activate for simple code reviews or single-file analysis.
 
 ### The report covers
 
