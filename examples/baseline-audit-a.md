@@ -1,6 +1,6 @@
 # Project Audit -- Content Pipeline
 
-Dis/till is a 5-stage Python pipeline that turns Instagram saved-post exports into a searchable static HTML gallery. It parses the export JSON, downloads media via yt-dlp, transcribes audio with Whisper, applies keyword-based tags from a taxonomy config, and generates a single-page gallery with filtering and transcript search. Around 2,800 lines across 12 files, processing ~4,500 items across 29 collections.
+A personal content curation pipeline that takes a social media platform's data export (saved posts/collections), downloads the actual media files (videos, images), transcribes audio using Whisper, applies tag-based categorization, and generates a static HTML gallery with filtering, search, and video playback. Built in Python (~2,800 lines across 12 files), using JSONL manifests for inter-stage communication. Currently processes ~4,500 saved items across 29 topic collections.
 
 The pipeline design is sound. JSONL manifests for inter-stage communication, per-post folders, resumable stages, atomic manifest writes -- these are good choices for a personal tool of this scale. The code is readable and well-organized. But there are real problems, and some of them compound each other.
 
@@ -18,7 +18,7 @@ The fix is straightforward: move the `write_manifest()` call inside the processi
 
 ## 2. Retry logic retries non-retryable errors
 
-In `download_media.py`, the `do_download()` function (lines 105-119) correctly detects 404s and login-required errors by raising `FileNotFoundError` and `PermissionError`. But these exceptions are then caught by `with_retry()` (in `shared/retries.py`), which retries on *all* exceptions indiscriminately. So a deleted post (404) gets retried 3 times with exponential backoff (5s, 10s, 20s) before finally failing. Multiply that by hundreds of failed items and you are wasting significant time plus burning through Instagram's rate-limit budget on requests that will never succeed.
+In `download_media.py`, the `do_download()` function (lines 105-119) correctly detects 404s and login-required errors by raising `FileNotFoundError` and `PermissionError`. But these exceptions are then caught by `with_retry()` (in `shared/retries.py`), which retries on *all* exceptions indiscriminately. So a deleted post (404) gets retried 3 times with exponential backoff (5s, 10s, 20s) before finally failing. Multiply that by hundreds of failed items and you are wasting significant time plus burning through the platform's rate-limit budget on requests that will never succeed.
 
 The fix: add an exception filter to `with_retry()`. Something like a `no_retry_on` parameter that accepts a tuple of exception types to immediately re-raise. Then pass `no_retry_on=(FileNotFoundError, PermissionError)` from the download stage. The detection logic already exists -- it just needs to stop the retry loop instead of continuing it.
 
@@ -33,7 +33,7 @@ vid.poster = p.th;     // line 1500
 vid.src = p.v;         // line 1502
 ```
 
-These values come from the JSONL manifests, which are populated from Instagram export data and folder paths. In the current use case (personal tool, local data), exploitation requires an attacker to modify the manifest files or the Instagram export. The risk is low but the fix is cheap: validate that paths start with expected prefixes (`content/instagram/`) and contain no protocol schemes (`javascript:`, `data:`, etc.) before assigning to `.src`.
+These values come from the JSONL manifests, which are populated from the platform export data and folder paths. In the current use case (personal tool, local data), exploitation requires an attacker to modify the manifest files or the the platform export. The risk is low but the fix is cheap: validate that paths start with expected prefixes (`content/instagram/`) and contain no protocol schemes (`javascript:`, `data:`, etc.) before assigning to `.src`.
 
 The `_safe_json()` function in `build_gallery.py` already handles the `</script>` injection vector for the embedded JSON data. This is the remaining gap.
 
@@ -61,16 +61,16 @@ I would not aim for full coverage. Just the pure functions that determine correc
 
 ## 6. README and project identity are out of date
 
-The README title is still "Instagram Saves Gallery" and the description focuses exclusively on Instagram. But the project was renamed to "Dis/till" and restructured for multi-platform support (Session 7). The `pyproject.toml` still says `name = "instagram-gallery"`. The CLAUDE.md correctly describes multi-platform support, but someone reading just the README or pyproject would not know it.
+The README title and description still focus exclusively on a single platform. But the project was restructured for multi-platform support. The `pyproject.toml` metadata has not been updated to reflect this. Someone reading just the README or pyproject would not know the project supports multiple platforms.
 
-Similarly, the README says "Python 3.10+" as a requirement, but the actual environment uses Python 3.14 and the code uses `float | None` union syntax (line 57 of `transcribe_audio.py`), which requires 3.10+. This happens to be consistent but was likely not deliberately tested against 3.10.
+Similarly, the README says "Python 3.10+" as a requirement, but the actual environment uses Python 3.14 and the code uses `float | None` union syntax, which requires 3.10+. This happens to be consistent but was likely not deliberately tested against 3.10.
 
 
-## 7. Only Instagram parser exists
+## 7. Only one platform parser exists
 
-The project structure has `content/{youtube,linkedin,substack}` and `exports/{youtube,linkedin,substack}` directories, and the gallery template detects platform from source URLs and shows platform-specific icons. But only `parse_export.py` (Instagram) exists. LinkedIn export data was placed in `exports/linkedin/` at the end of Session 7, but no parser was built.
+The project structure has directories for multiple platforms, and the gallery template detects platform from source URLs and shows platform-specific icons. But only one parser exists. Export data for a second platform was placed in the exports directory but no parser was built.
 
-This is not a bug -- it is planned future work. But it is worth noting because the gallery's platform detection logic (`build_gallery.py` lines 168-175) is already implemented and tested only against Instagram data. When LinkedIn posts arrive, the entire downstream pipeline (download, transcribe, tag, build) needs to handle non-Instagram post IDs, folder structures, and media formats. The current `ig_` prefix convention in `extract_shortcode()` is Instagram-specific.
+This is not a bug -- it is planned future work. But it is worth noting because the gallery's platform detection logic is already implemented and tested only against data from the first platform. When data from other platforms arrives, the entire downstream pipeline (download, transcribe, tag, build) needs to handle different post ID formats, folder structures, and media formats.
 
 
 ## 8. Dead code and unused dependencies
@@ -89,7 +89,7 @@ Both `tag_posts.py` (line 40-49, `load_transcript_text()`) and `build_gallery.py
 
 ## 10. Minor issues
 
-- **`parse_export.py` line 82**: The key `"Saved on"` is hard-coded in English. If someone downloads their Instagram data in another language, this silently produces zero posts. No error, no warning.
+- **`parse_export.py` line 82**: The key `"Saved on"` is hard-coded in English. If someone downloads their the platform data in another language, this silently produces zero posts. No error, no warning.
 - **`transcribe_audio.py` line 237**: The temp file is created *before* the `try` block. If `extract_audio()` raises before the `finally` block, the temp file leaks. In practice, the `finally` block with `unlink(missing_ok=True)` covers this, but the tempfile creation should be inside the try block.
 - **`download_images_apify.py`**: Uses bare `urllib.request` without retry logic, while `download_media.py` uses `with_retry`. Inconsistent resilience between the two download paths.
 

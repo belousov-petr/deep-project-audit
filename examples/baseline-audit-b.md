@@ -1,6 +1,6 @@
 # Project Audit -- AI News Intelligence Pipeline
 
-This is a working audit of the Horizonscan daily intelligence pipeline running on Paperclip. The pipeline has been operational for roughly 11 days, producing 8 daily briefs from 333 scored signals across 16 agents. Here is what is broken, what is fragile, and what to fix first.
+This is a working audit of a daily AI news intelligence pipeline built on Paperclip. The pipeline has been operational for roughly 11 days, producing 8 daily briefs from 333 scored signals across 16 agents. Here is what is broken, what is fragile, and what to fix first.
 
 
 ## The biggest risk: nobody reads the output
@@ -18,7 +18,7 @@ OPS.md contains database credentials in cleartext. This is the single most urgen
 The incident where a scout hung for 9 hours on an external site exposed the core fragility -- agents had no timeouts. Timeouts have since been added (20-30 min per agent), which is good. But timeouts alone are not sufficient:
 
 - There is no circuit breaker. If a source is consistently slow or down, the scout will burn its full timeout every single run before failing. A circuit breaker that skips known-bad sources for N runs after repeated failures would save significant time and cost.
-- There is no alerting. The 9-hour run was presumably discovered manually. A simple check -- "if the pipeline has been running longer than 90 minutes, send a Telegram message" -- would catch this instantly. Given you already use Telegram for the jobs scraper heartbeat, this is a natural fit.
+- There is no alerting. The 9-hour run was presumably discovered manually. A simple check -- "if the pipeline has been running longer than 90 minutes, send a notification" -- would catch this instantly.
 - There is no run-level timeout. Individual agent timeouts of 30 min across 15 agents could theoretically allow a 7.5-hour sequential run. A global pipeline timeout (say 2 hours) that kills the entire run and alerts would provide a hard ceiling.
 
 
@@ -61,7 +61,7 @@ This does not need a testing framework. A Python script that runs the pipeline w
 
 1. **Rotate DB credentials out of OPS.md** -- 30 minutes, eliminates a real security exposure
 2. **Set up logrotate** -- 10 minutes, prevents disk-full outage
-3. **Add pipeline-level alerting** -- Telegram notification if run exceeds 90 min or fails entirely
+3. **Add pipeline-level alerting** -- notification if run exceeds 90 min or fails entirely
 4. **Delete the duplicate Pipeline Auditor** -- 5 minutes, removes ambiguity
 5. **Add backup pruning** -- simple cron job, prevents storage creep
 6. **Update PROJECT-MEMORY.md** -- 15 minutes, or delete it if nobody maintains it
