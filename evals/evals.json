@@ -1,0 +1,310 @@
+{
+  "skill_name": "deep-project-audit",
+  "description": "Evaluates whether the skill produces structured, complete, actionable audit reports across different project types. Each eval tests a specific capability the skill should handle.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "small-cli-tool",
+      "description": "Small CLI tool with ~20 files, no database, no tests. Tests that the skill handles minimal projects without bloating the report with irrelevant sections.",
+      "project_characteristics": {
+        "type": "CLI tool",
+        "files": "~20",
+        "languages": ["Python or Node.js"],
+        "database": false,
+        "tests": false,
+        "docs": "README only"
+      },
+      "prompt": "Audit this project — find what's broken and what to fix first.",
+      "expected_behavior": "Skill should skip Phase 3 (no DB), flag missing tests as critical gap, produce a proportionally-sized report (not 10 pages for a 20-file project), and still cover all required output sections.",
+      "assertions": [
+        {
+          "id": "1.1",
+          "check": "contains_section",
+          "target": "What the Project Is",
+          "description": "Output contains a 'What the Project Is' section with a one-paragraph summary derived from reading, not assumed"
+        },
+        {
+          "id": "1.2",
+          "check": "contains_table",
+          "target": "Production Readiness",
+          "description": "Output contains a production readiness table with PASS/PARTIAL/FAIL ratings for all 10 gates"
+        },
+        {
+          "id": "1.3",
+          "check": "contains_table",
+          "target": "Top 10 Ranked Recommendations",
+          "description": "Output contains a recommendations table with Impact, Effort, and Who Implements columns filled"
+        },
+        {
+          "id": "1.4",
+          "check": "contains_section",
+          "target": "The Uncomfortable Question",
+          "description": "Output contains 'The Uncomfortable Question' section with non-empty content"
+        },
+        {
+          "id": "1.5",
+          "check": "contains_rating",
+          "target": "Overall Rating",
+          "description": "Output contains an Overall Rating X/10 with one-sentence justification"
+        },
+        {
+          "id": "1.6",
+          "check": "skip_or_note",
+          "target": "Data Store Diagnostics",
+          "description": "Phase 3 is skipped with explicit note ('No data store detected'), not left blank or hallucinated"
+        },
+        {
+          "id": "1.7",
+          "check": "flags_gap",
+          "target": "Testing",
+          "description": "Missing tests are flagged as a gap in both the analysis and the production readiness table"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "medium-web-app-with-db",
+      "description": "Medium web application (Express/Flask) with a database, some tests, and documentation. Tests that the skill runs DB diagnostics and compares docs to reality.",
+      "project_characteristics": {
+        "type": "Web application",
+        "files": "~100-200",
+        "languages": ["Python/Flask or Node.js/Express"],
+        "database": true,
+        "tests": "partial (unit only)",
+        "docs": "README + API docs"
+      },
+      "prompt": "Audit this project — find what's broken and what to fix first.",
+      "expected_behavior": "Skill should run Phase 3 DB diagnostics, check schema and data freshness, compare API docs against actual routes, flag partial test coverage, and assess security (injection, auth, PII).",
+      "assertions": [
+        {
+          "id": "2.1",
+          "check": "contains_section",
+          "target": "What the Project Is",
+          "description": "Output contains a project summary derived from actual file reading"
+        },
+        {
+          "id": "2.2",
+          "check": "contains_db_analysis",
+          "target": "Data Store Diagnostics",
+          "description": "Output includes database diagnostics: table listing, data freshness, or explicit note about access issues"
+        },
+        {
+          "id": "2.3",
+          "check": "contains_section",
+          "target": "Security & Data Exposure",
+          "description": "Output covers injection vulnerabilities, secrets scanning, and PII checks"
+        },
+        {
+          "id": "2.4",
+          "check": "stated_vs_actual",
+          "target": "Documentation Quality",
+          "description": "Output compares documentation claims against actual system behavior, flagging discrepancies"
+        },
+        {
+          "id": "2.5",
+          "check": "contains_table",
+          "target": "Production Readiness",
+          "description": "Output contains production readiness table with all 10 gates rated"
+        },
+        {
+          "id": "2.6",
+          "check": "contains_table",
+          "target": "Top 10 Ranked Recommendations",
+          "description": "Output contains recommendations table with all required columns filled"
+        },
+        {
+          "id": "2.7",
+          "check": "contains_table",
+          "target": "Objective Clarity Assessment",
+          "description": "Output contains dimension ratings table with numeric scores and evidence"
+        },
+        {
+          "id": "2.8",
+          "check": "contains_section",
+          "target": "The Uncomfortable Question",
+          "description": "Output contains a non-empty uncomfortable question"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "large-agent-system",
+      "description": "Large multi-agent system with 600+ files, multiple data stores, complex coordination. Tests that the skill scales with parallel reads and handles agent/pipeline-specific analysis.",
+      "project_characteristics": {
+        "type": "Multi-agent system",
+        "files": "600+",
+        "languages": ["Python", "YAML", "Shell"],
+        "database": true,
+        "tests": "mixed",
+        "docs": "README + design docs + agent instructions"
+      },
+      "prompt": "Audit this project — find what's broken and what to fix first.",
+      "expected_behavior": "Skill should use parallel agents for reading, sample large directories instead of reading everything, analyze agent coordination and pipeline flow, check for contradictions between agent instructions, and handle the scale without timing out.",
+      "assertions": [
+        {
+          "id": "3.1",
+          "check": "scope_confirmation",
+          "target": "Phase 1",
+          "description": "Skill presents discovery summary and asks user to confirm scope before deep reading"
+        },
+        {
+          "id": "3.2",
+          "check": "parallel_execution",
+          "target": "Phase 2",
+          "description": "Phase 2 dispatches multiple parallel agents (not sequential reads)"
+        },
+        {
+          "id": "3.3",
+          "check": "sampling_strategy",
+          "target": "Large directory handling",
+          "description": "For directories with many files, skill samples representative files and counts the rest rather than reading all"
+        },
+        {
+          "id": "3.4",
+          "check": "contains_section",
+          "target": "Architecture & Code Quality",
+          "description": "Output analyzes design pattern coherence and MECE responsibilities across agents/components"
+        },
+        {
+          "id": "3.5",
+          "check": "contains_section",
+          "target": "Error Handling, Resilience & Failure Modes",
+          "description": "Output traces failure paths through agent coordination, not just individual components"
+        },
+        {
+          "id": "3.6",
+          "check": "contains_table",
+          "target": "Production Readiness",
+          "description": "Output contains production readiness table with all 10 gates rated"
+        },
+        {
+          "id": "3.7",
+          "check": "contains_table",
+          "target": "Top 10 Ranked Recommendations",
+          "description": "Output contains recommendations with all columns filled"
+        },
+        {
+          "id": "3.8",
+          "check": "contains_section",
+          "target": "The Uncomfortable Question",
+          "description": "Output contains a non-empty uncomfortable question"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "outdated-docs-project",
+      "description": "Project where documentation describes features that don't exist and omits features that do. Tests the skill's stated-vs-actual detection capability.",
+      "project_characteristics": {
+        "type": "Any (web app, CLI, library)",
+        "files": "~50-100",
+        "languages": ["Any"],
+        "database": "optional",
+        "tests": "some",
+        "docs": "README that is outdated or misleading"
+      },
+      "prompt": "Audit this project — find what's broken and what to fix first.",
+      "expected_behavior": "Skill should detect that README/docs describe features not present in code, and that implemented features are undocumented. This should appear in Documentation Quality (5.3) and Goal Fulfillment (5.4), and rank high in recommendations.",
+      "assertions": [
+        {
+          "id": "4.1",
+          "check": "stated_vs_actual",
+          "target": "Goal Fulfillment",
+          "description": "Output explicitly compares stated objective from docs against what the code actually does"
+        },
+        {
+          "id": "4.2",
+          "check": "doc_discrepancy",
+          "target": "Documentation Quality",
+          "description": "Output flags specific discrepancies: features described in docs but missing from code, or implemented features missing from docs"
+        },
+        {
+          "id": "4.3",
+          "check": "recommendation_priority",
+          "target": "Documentation accuracy",
+          "description": "Documentation inaccuracy appears in the Top 10 recommendations, not buried as a minor note"
+        },
+        {
+          "id": "4.4",
+          "check": "contains_table",
+          "target": "Production Readiness",
+          "description": "Documentation gate in production readiness table is rated PARTIAL or FAIL with evidence"
+        },
+        {
+          "id": "4.5",
+          "check": "contains_rating",
+          "target": "Overall Rating",
+          "description": "Output contains an Overall Rating X/10 with justification"
+        },
+        {
+          "id": "4.6",
+          "check": "contains_section",
+          "target": "The Uncomfortable Question",
+          "description": "Output contains a non-empty uncomfortable question"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "no-tests-production-claim",
+      "description": "Project that claims production readiness but has zero tests. Tests that the skill gates production readiness on test coverage.",
+      "project_characteristics": {
+        "type": "Any",
+        "files": "~30-80",
+        "languages": ["Any"],
+        "database": "optional",
+        "tests": false,
+        "docs": "README claims 'production ready' or 'stable'"
+      },
+      "prompt": "Audit this project — find what's broken and what to fix first.",
+      "expected_behavior": "Skill should flag missing tests as a critical issue, rate the Testing gate as FAIL in production readiness, and the verdict should NOT be 'Ready to ship'. Missing tests should appear in recommendations.",
+      "assertions": [
+        {
+          "id": "5.1",
+          "check": "flags_gap",
+          "target": "Testing",
+          "description": "Missing tests are explicitly flagged as a critical gap, not mentioned as a minor improvement"
+        },
+        {
+          "id": "5.2",
+          "check": "production_gate_fail",
+          "target": "Testing gate",
+          "description": "Testing gate in production readiness table is rated FAIL (not PARTIAL or PASS)"
+        },
+        {
+          "id": "5.3",
+          "check": "verdict_not_ready",
+          "target": "Production Readiness verdict",
+          "description": "Verdict is NOT 'Ready to ship' — must be 'Needs N fixes' or 'Not production-ready'"
+        },
+        {
+          "id": "5.4",
+          "check": "recommendation_priority",
+          "target": "Add tests",
+          "description": "Adding tests appears in the Top 10 recommendations with high impact rating"
+        },
+        {
+          "id": "5.5",
+          "check": "stated_vs_actual",
+          "target": "Production readiness claim",
+          "description": "Output flags the contradiction between 'production ready' claim and zero test coverage"
+        },
+        {
+          "id": "5.6",
+          "check": "contains_section",
+          "target": "The Uncomfortable Question",
+          "description": "Output contains a non-empty uncomfortable question"
+        }
+      ]
+    }
+  ],
+  "grading": {
+    "method": "assertion_pass_rate",
+    "pass_threshold": 0.8,
+    "description": "Each eval is graded by the percentage of assertions that pass. A skill activation is considered successful if >=80% of assertions pass. Compare with-skill vs without-skill (bare 'audit this project' prompt) to measure added value."
+  },
+  "baseline_comparison": {
+    "description": "Run each eval twice: once with the skill active, once without (bare prompt). The delta in assertion pass rates measures the skill's added value.",
+    "expected_delta": "With-skill pass rate should be significantly higher (>30% improvement) on structural completeness assertions (tables, sections, gates) and stated-vs-actual detection."
+  }
+}
