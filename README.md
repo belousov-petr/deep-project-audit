@@ -136,6 +136,21 @@ A few rules I keep coming back to when reviewing my own projects:
 9. Find what's wrong, not just what's right. The point is to make the project better, not to feel good about it.
 10. Surface the constraints nobody talks about: rate limits, daily budgets, peak hour pricing. Those shape what's actually possible more than architecture does.
 
+## Benchmark results
+
+Tested on 3 real projects: a content pipeline (~2,800 lines Python), a 16-agent AI intelligence pipeline, and a browser automation tool (~1,000 lines JS). Each project was audited twice — once with the skill active, once with a bare "audit this project" prompt (no methodology).
+
+The output was graded against 18 structural completeness checks (see `scripts/validate-output.py`).
+
+| Project | With skill | Without skill | Delta |
+|---------|-----------|--------------|-------|
+| Content pipeline | 18/18 (100%) | 1/18 (5%) | +95% |
+| Agent pipeline | 18/18 (100%) | 2/18 (11%) | +89% |
+| Browser tool | 18/18 (100%) | 3/18 (16%) | +84% |
+| **Average** | **100%** | **11%** | **+89%** |
+
+The bare audits found real issues but produced freeform prose. They consistently missed: production readiness gates, objective clarity ratings, structured recommendations with impact/effort/who columns, security analysis, logging assessment, goal fulfillment check, blind spots, and "the uncomfortable question." Full reports in `examples/`.
+
 ## Why this exists
 
 I was running a 12-agent intelligence pipeline and every time I wanted to review the whole thing, I'd write a long audit prompt from scratch. Every time, I'd forget something. Sometimes security. Sometimes backup validation. Sometimes I just wouldn't look at how the agents coordinate with each other.
@@ -155,7 +170,17 @@ deep-project-audit/
 │   ├── performance-analysis.md           # Section 4.6: full performance checks
 │   └── resilience-testing.md             # Phase 6: backup and resilience tests
 ├── examples/
-│   └── sample-audit.md                   # Anonymized example from a real audit
+│   ├── sample-audit.md                   # With-skill audit: content pipeline
+│   ├── benchmark-audit-b.md              # With-skill audit: agent pipeline
+│   ├── benchmark-audit-c.md              # With-skill audit: browser tool
+│   ├── baseline-audit-a.md               # Without-skill baseline: content pipeline
+│   ├── baseline-audit-b.md               # Without-skill baseline: agent pipeline
+│   └── baseline-audit-c.md               # Without-skill baseline: browser tool
+├── evals/
+│   ├── evals.json                        # 5 test cases with 35 assertions
+│   └── README.md                         # How to run and grade evals
+├── scripts/
+│   └── validate-output.py                # 18-check output completeness validator
 ├── README.md
 └── LICENSE                               # CC BY 4.0
 ```
