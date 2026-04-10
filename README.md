@@ -10,6 +10,14 @@ I made this because I kept writing the same audit prompt from scratch every time
 
 ![Deep Project Audit](deep-project-audit.png)
 
+## Why this exists
+
+I was running a 12-agent intelligence pipeline and every time I wanted to review the whole thing, I'd write a long audit prompt from scratch. Every time, I'd forget something. Sometimes security. Sometimes backup validation. Sometimes I just wouldn't look at how the agents coordinate with each other.
+
+It's never the obvious stuff. It's always the thing you assumed was fine until it wasn't.
+
+So I made it into a skill. Same checklist, same order, every time. Now I run one command and know I'm not skipping anything. It also finds things I wasn't looking for, which surprised me. After using it on a few projects I figured other people might find it useful too.
+
 ## What it does
 
 One command. Full analysis. Actionable output.
@@ -82,7 +90,7 @@ Restart Claude Code. It shows up as `/deep-project-audit`.
 ### Check it works
 
 ```
-> /deep-project-audit
+/deep-project-audit
 ```
 
 You should see it start mapping your project structure.
@@ -138,7 +146,7 @@ A few rules I keep coming back to when reviewing my own projects:
 
 ## Benchmark results
 
-Tested on 3 real projects: a content pipeline (~2,800 lines Python), a 16-agent AI intelligence pipeline, and a browser automation tool (~1,000 lines JS). Each project was audited twice — once with the skill active, once with a bare "audit this project" prompt (no methodology).
+Tested on 3 real projects: a content pipeline (~2,800 lines Python), a 16-agent AI intelligence pipeline, and a browser automation tool (~1,000 lines JS). Each project was audited twice - once with the skill active, once with a bare "audit this project" prompt (no methodology).
 
 The output was graded against 18 structural completeness checks (see `scripts/validate-output.py`).
 
@@ -151,26 +159,28 @@ The output was graded against 18 structural completeness checks (see `scripts/va
 
 The bare audits found real issues but produced freeform prose. They consistently missed: production readiness gates, objective clarity ratings, structured recommendations with impact/effort/who columns, security analysis, logging assessment, goal fulfillment check, blind spots, and "the uncomfortable question." Full reports in `examples/`.
 
-## Why this exists
+## Token usage
 
-I was running a 12-agent intelligence pipeline and every time I wanted to review the whole thing, I'd write a long audit prompt from scratch. Every time, I'd forget something. Sometimes security. Sometimes backup validation. Sometimes I just wouldn't look at how the agents coordinate with each other.
+A typical audit uses 50K-300K tokens across all 6 phases, depending on project size:
 
-It's never the obvious stuff. It's always the thing you assumed was fine until it wasn't.
-
-So I made it into a skill. Same checklist, same order, every time. Now I run one command and know I'm not skipping anything. It also finds things I wasn't looking for, which surprised me. After using it on a few projects I figured other people might find it useful too.
+| Project type | Files | Tokens | Example |
+|---|---|---|---|
+| Small CLI/browser tool | ~20 | ~50K | [`benchmark-audit-c.md`](examples/benchmark-audit-c.md) |
+| Medium pipeline | ~50 | ~150K | [`benchmark-audit-a.md`](examples/benchmark-audit-a.md) |
+| Large agent system | 600+ | ~250K | [`benchmark-audit-b.md`](examples/benchmark-audit-b.md) |
 
 ## Project structure
 
 ```
 deep-project-audit/
-├── SKILL.md                              # The skill — loaded when activated
+├── SKILL.md                              # The skill - loaded when activated
 ├── references/
 │   ├── db-diagnostics.md                 # Phase 3: database-specific queries
 │   ├── security-checklist.md             # Section 5.1: full security checks
 │   ├── performance-analysis.md           # Section 4.6: full performance checks
 │   └── resilience-testing.md             # Phase 6: backup and resilience tests
 ├── examples/
-│   ├── benchmark-audit-a.md               # With-skill audit: content pipeline
+│   ├── benchmark-audit-a.md              # With-skill audit: content pipeline
 │   ├── benchmark-audit-b.md              # With-skill audit: agent pipeline
 │   ├── benchmark-audit-c.md              # With-skill audit: browser tool
 │   ├── baseline-audit-a.md               # Without-skill baseline: content pipeline
@@ -185,17 +195,7 @@ deep-project-audit/
 └── LICENSE                               # CC BY 4.0
 ```
 
-The main SKILL.md contains the methodology and output format. Detailed checklists are in `references/` and loaded on demand — this keeps activation cost low while preserving depth.
-
-## Token usage
-
-A typical audit uses 50K-300K tokens across all 6 phases, depending on project size:
-
-| Project type | Files | Tokens | Example |
-|---|---|---|---|
-| Small CLI/browser tool | ~20 | ~50K | [`benchmark-audit-c.md`](examples/benchmark-audit-c.md) |
-| Medium pipeline | ~50 | ~150K | [`benchmark-audit-a.md`](examples/benchmark-audit-a.md) |
-| Large agent system | 600+ | ~250K | [`benchmark-audit-b.md`](examples/benchmark-audit-b.md) |
+The main SKILL.md contains the methodology and output format. Detailed checklists are in `references/` and loaded on demand - this keeps activation cost low while preserving depth.
 
 ## Contributing
 
