@@ -755,18 +755,6 @@ genai.owasp.org/resource/owasp-genai-data-security-risks-mitigations-2026]_
 - Are classification scanners at every pipeline ingress (re-classify at
   merge time, don't trust inherited labels)?
 
-### Vector Store Security (DSGAI13)
-- Are vector stores encrypted at rest and in transit?
-- Is tenant scoping enforced server-side?
-- Are similarity query patterns monitored for extraction attempts?
-- Is snapshot/import security controlled?
-
-### Excessive Telemetry & Monitoring Leakage (DSGAI14)
-- Do logs/traces capture full prompts or tool outputs (over-logging)?
-- Are prompts, tool outputs, and secrets tokenized/redacted in logs?
-- Are debug traces time-limited with approval workflows?
-- Is access to observability platforms controlled and monitored?
-
 ### Non-Compliance & Regulatory Violations (DSGAI08)
 - Are DPIAs conducted before training/deploying models on personal data?
 - Do DPIAs explicitly cover derived artifacts (embeddings, fine-tuned
@@ -834,6 +822,18 @@ genai.owasp.org/resource/owasp-genai-data-security-risks-mitigations-2026]_
 - Known CVEs: CVE-2024-8309 (LangChain GraphCypherQAChain prompt
   injection to malicious Cypher queries), CVE-2024-7042 (langchain-js
   prompt injection to SQL injection enabling multi-tenant breach)
+
+### Vector Store Security (DSGAI13)
+- Are vector stores encrypted at rest and in transit?
+- Is tenant scoping enforced server-side?
+- Are similarity query patterns monitored for extraction attempts?
+- Is snapshot/import security controlled?
+
+### Excessive Telemetry & Monitoring Leakage (DSGAI14)
+- Do logs/traces capture full prompts or tool outputs (over-logging)?
+- Are prompts, tool outputs, and secrets tokenized/redacted in logs?
+- Are debug traces time-limited with approval workflows?
+- Is access to observability platforms controlled and monitored?
 
 ### Over-Broad Context Windows (DSGAI15)
 - Is context minimized (only necessary data sent to the model)?
