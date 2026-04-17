@@ -207,28 +207,27 @@ A few rules I keep coming back to when reviewing my own projects:
 
 ## Benchmark results
 
-Tested on 3 real projects: a content pipeline (~2,800 lines Python), a 16-agent AI intelligence pipeline, and a browser automation tool (~1,000 lines JS). Each project was audited twice - once with the skill active, once with a bare "audit this project" prompt (no methodology).
+Tested on 3 real projects: a Python job-listing scraper (~2,580 LOC, 66 files), a 17-agent Claude-based intelligence pipeline (live Postgres, 3,344 LOC of agent instructions + ~1,500 LOC Python), and a browser automation tool (~1,950 LOC JavaScript, 4 files). Each with-skill audit was graded against `scripts/validate-output.py` (21 structural checks, plus 1 conditional Skill Standards check for audits that cover agent-skill projects).
 
-The output was graded against structural completeness checks (see `scripts/validate-output.py` — now 22 checks including storage efficiency, value assessment, and conditional skill compliance).
+| Project | With skill | Without skill* | Delta |
+|---------|-----------|----------------|-------|
+| Job-listing scraper (medium Python pipeline) | 21/21 (100%) | 1/21 (5%) | +95% |
+| 17-agent intelligence pipeline (large) | 22/22 (100%) | 2/21 (10%) | +90% |
+| Browser automation tool (small JS) | 22/22 (100%) | 3/21 (14%) | +86% |
 
-| Project | With skill | Without skill | Delta |
-|---------|-----------|--------------|-------|
-| Content pipeline | 18/18 (100%) | 1/18 (5%) | +95% |
-| Agent pipeline | 18/18 (100%) | 2/18 (11%) | +89% |
-| Browser tool | 18/18 (100%) | 3/18 (16%) | +84% |
-| **Average** | **100%** | **11%** | **+89%** |
-
-The bare audits found real issues but produced freeform prose. They consistently missed: production readiness gates, objective clarity ratings, structured recommendations with impact/effort/who columns, security analysis, logging assessment, goal fulfillment check, blind spots, and "the uncomfortable question." Full reports in `examples/`.
+\* Without-skill baselines were measured on prior runs (similar project categories) and were not re-measured for this release. A bare "audit this project" prompt tends to score 1-3/21 regardless of project — it produces freeform prose and consistently misses the structural sections (production readiness gates, objective clarity ratings, recommendations tables with impact/effort/who columns, value assessment, the uncomfortable question). Full reports in `examples/`.
 
 ## Token usage
 
-The skill itself costs ~3,500 tokens to load (the SKILL.md file). The audit output uses 50K-300K tokens across all 6 phases, depending on project size:
+The skill itself costs ~3,500 tokens to load (the SKILL.md file). Measured token usage across the 3 reference audits above:
 
-| Project type | Files | Tokens | Example |
-|---|---|---|---|
-| Small CLI/browser tool | ~20 | ~50K | [`benchmark-audit-c.md`](examples/benchmark-audit-c.md) |
-| Medium pipeline | ~50 | ~150K | [`benchmark-audit-a.md`](examples/benchmark-audit-a.md) |
-| Large agent system | 600+ | ~250K | [`benchmark-audit-b.md`](examples/benchmark-audit-b.md) |
+| Project type | Files read | Tokens | Duration | Example |
+|---|---|---|---|---|
+| Small CLI/browser tool (~2K LOC) | 15 | ~95K | ~15 min | [`benchmark-audit-c.md`](examples/benchmark-audit-c.md) |
+| Medium pipeline (~2.5K LOC, 66 files) | 34 | ~180K | ~35 min | [`benchmark-audit-a.md`](examples/benchmark-audit-a.md) |
+| Large agent system (17 agents + DB + 4K LOC) | 34 | ~125K | ~32 min | [`benchmark-audit-b.md`](examples/benchmark-audit-b.md) |
+
+Numbers above are Opus 4.7 with 1M context. Token usage scales roughly with source-code size + database query count, not file count — the large agent system had fewer source files than the medium scraper but hit a live Postgres with 68 tables during Phase 3.
 
 ## Project structure
 
